@@ -1,18 +1,18 @@
-import { CommandHandler, ICommandHandler, EventPublisher } from '@nestjs/cqrs';
-import { CreateUserCommand } from '../implement/CreateUser.command';
-import { UserRoot } from '../../model/User.model';
-import { User } from '../../entities';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+
+import { User } from '../../entities';
+import { UserRoot } from '../../model/User.model';
+import { UserRepository } from '../../repository/userRepository.repository';
+import { CreateUserCommand } from '../implement/CreateUser.command';
 
 @CommandHandler(CreateUserCommand)
 export class CreateUserHandler
   implements ICommandHandler<CreateUserCommand, User>
 {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-    // private readonly eventBus: EventBus,
+    @InjectRepository(UserRepository)
+    private readonly userRepository: UserRepository,
     private readonly eventBus: EventPublisher,
   ) {}
 
@@ -20,12 +20,11 @@ export class CreateUserHandler
   // Agregar el repositorio central para el trabajo en para centralizar los metodos
   async execute(command: CreateUserCommand): Promise<User> {
     const { createUserDto } = command;
-    const newUser = this.userRepository.create(createUserDto);
-    const root = new UserRoot(createUserDto);
-    const temporal = this.eventBus.mergeObjectContext(root);
-    temporal.crearUsuario(createUserDto);
-    temporal.commit();
-    await this.userRepository.save(newUser);
+    const newUser = await this.userRepository.createUser(createUserDto);
+    const userRoot = new UserRoot(createUserDto);
+    const user = this.eventBus.mergeObjectContext(userRoot);
+    user.crearUsuario(createUserDto);
+    user.commit();
     return newUser;
   }
 }

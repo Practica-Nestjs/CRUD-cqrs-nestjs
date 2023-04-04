@@ -6,14 +6,14 @@ import { CommandHandlers } from './command/handler';
 import { User } from './entities';
 import { EventHandlers } from './event/handler';
 import { QueryHandlers } from './queries/handler';
-// import { UserRespository } from './repository/User.repository';
+import { UserRepository } from './repository/userRepository.repository';
 import { UserController } from './user.controller';
 
 @Module({
-  imports: [CqrsModule, TypeOrmModule.forFeature([User])],
+  imports: [CqrsModule, TypeOrmModule.forFeature([User, UserRepository])],
   controllers: [UserController],
   providers: [
-    // UserRespository,
+    UserRepository,
     ...CommandHandlers,
     ...EventHandlers,
     ...QueryHandlers,
